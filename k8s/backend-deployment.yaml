@@ -19,9 +19,12 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 101
+        fsGroup: 101
       containers:
         - name: backend
-          image: ghcr.io/YOUR_ORG/airport-backend:1.0.0
+          image: ghcr.io/genersuhul/airport-backend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
