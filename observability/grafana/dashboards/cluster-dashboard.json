@@ -1,0 +1,27 @@
+{
+  "uid": "airport-cluster",
+  "title": "Airport Kubernetes Cluster Dashboard",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Pods Running",
+      "gridPos": {"x": 0, "y": 0, "w": 6, "h": 4},
+      "targets": [{"expr": "sum(kube_pod_status_phase{namespace=\"airport\", phase=\"Running\"})", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "CPU Usage by Pod",
+      "gridPos": {"x": 6, "y": 0, "w": 9, "h": 6},
+      "targets": [{"expr": "sum(rate(container_cpu_usage_seconds_total{namespace=\"airport\", container!=\"\"}[5m])) by (pod)", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory by Pod",
+      "gridPos": {"x": 15, "y": 0, "w": 9, "h": 6},
+      "targets": [{"expr": "sum(container_memory_working_set_bytes{namespace=\"airport\", container!=\"\"}) by (pod)", "refId": "A"}]
+    }
+  ]
+}

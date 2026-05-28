@@ -1,0 +1,106 @@
+services:
+  oracle:
+    image: gvenzl/oracle-free:23.7-slim-faststart
+    container_name: airport-oracle
+    platform: linux/amd64
+    shm_size: 2g
+    cap_add:
+      - SYS_RESOURCE
+    security_opt:
+      - seccomp=unconfined
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+      nproc:
+        soft: 16384
+        hard: 16384
+    environment:
+      ORACLE_PASSWORD: ${ORACLE_PASSWORD:-AirportPass123}
+      APP_USER: AIRPORT
+      APP_USER_PASSWORD: ${ORACLE_PASSWORD:-AirportPass123}
+      INIT_SGA_SIZE: 1024
+      INIT_PGA_SIZE: 512
+    ports:
+      - "1522:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 20s
+      timeout: 10s
+      retries: 20
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: airport-backend
+    depends_on:
+      oracle:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:oracle:thin:@oracle:1521/FREEPDB1
+      DB_USERNAME: AIRPORT
+      DB_PASSWORD: ${ORACLE_PASSWORD:-AirportPass123}
+      JWT_SECRET: ${JWT_SECRET:-change-this-development-secret-change-this-development-secret}
+      ADMIN_EMAIL: admin@airport.local
+      ADMIN_PASSWORD: Admin12345!
+      CORS_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:4200
+      PAYMENT_APPROVAL_RATE: ${PAYMENT_APPROVAL_RATE:-0.88}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health/readiness"]
+      interval: 20s
+      timeout: 5s
+      retries: 15
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: airport-frontend
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8081:8080"
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    container_name: airport-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./observability/prometheus/prometheus.local.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    container_name: airport-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  oracle-data:
+  prometheus-data:
+  grafana-data:

@@ -1,0 +1,21 @@
+{
+  "uid": "airport-node",
+  "title": "Airport Node Dashboard",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Node CPU",
+      "gridPos": {"x": 0, "y": 0, "w": 12, "h": 6},
+      "targets": [{"expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "refId": "A"}]
+    },
+    {
+      "type": "timeseries",
+      "title": "Node Memory",
+      "gridPos": {"x": 12, "y": 0, "w": 12, "h": 6},
+      "targets": [{"expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100", "refId": "A"}]
+    }
+  ]
+}

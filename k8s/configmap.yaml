@@ -1,0 +1,156 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airport-config
+  namespace: airport
+data:
+  DB_URL: jdbc:oracle:thin:@oracle:1521/FREEPDB1
+  DB_USERNAME: AIRPORT
+  ADMIN_EMAIL: admin@airport.local
+  CORS_ALLOWED_ORIGINS: https://airport.example.com
+  PAYMENT_APPROVAL_RATE: "0.88"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: airport
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    rule_files:
+      - /etc/prometheus/rules/*.yml
+
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ["localhost:9090"]
+
+      - job_name: airport-backend
+        metrics_path: /actuator/prometheus
+        kubernetes_sd_configs:
+          - role: endpoints
+            namespaces:
+              names: ["airport"]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_service_name]
+            action: keep
+            regex: backend
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: http
+
+      - job_name: kubernetes-pods
+        kubernetes_sd_configs:
+          - role: pod
+            namespaces:
+              names: ["airport"]
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: "true"
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+
+      - job_name: kube-state-metrics
+        static_configs:
+          - targets: ["kube-state-metrics:8080"]
+
+      - job_name: node-exporter
+        static_configs:
+          - targets: ["node-exporter:9100"]
+
+  alerts.yml: |
+    groups:
+      - name: airport-sre-alerts
+        rules:
+          - alert: PodDown
+            expr: kube_pod_status_phase{namespace="airport", phase=~"Failed|Unknown"} > 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Pod caído en namespace airport"
+              description: "El pod {{ $labels.pod }} está en estado {{ $labels.phase }}."
+
+          - alert: DeploymentReplicasUnavailable
+            expr: kube_deployment_status_replicas_unavailable{namespace="airport"} > 0
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Deployment sin replicas disponibles"
+              description: "{{ $labels.deployment }} tiene replicas no disponibles."
+
+          - alert: HighPodCPU
+            expr: sum(rate(container_cpu_usage_seconds_total{namespace="airport", container!=""}[5m])) by (pod) > 0.75
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "CPU alta en pod"
+              description: "{{ $labels.pod }} supera el umbral de CPU."
+
+          - alert: HighPodMemory
+            expr: sum(container_memory_working_set_bytes{namespace="airport", container!=""}) by (pod) > 800000000
+            for: 5m
+            labels:
+              severity: warning
+            annotations:
+              summary: "RAM alta en pod"
+              description: "{{ $labels.pod }} consume mucha memoria."
+
+          - alert: BackendHttp500
+            expr: increase(http_server_requests_seconds_count{status=~"5.."}[5m]) > 5
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "HTTP 500 elevado en backend"
+              description: "El backend reportó más de 5 respuestas 5xx en 5 minutos."
+
+          - alert: ServiceDown
+            expr: up == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Servicio sin scrape"
+              description: "Prometheus no puede scrapear {{ $labels.job }}."
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-provisioning
+  namespace: airport
+data:
+  datasource.yml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus:9090
+        isDefault: true
+        editable: false
+  dashboards.yml: |
+    apiVersion: 1
+    providers:
+      - name: Airport Kubernetes
+        orgId: 1
+        folder: Airport Platform
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
