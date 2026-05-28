@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: oracle
-          image: gvenzl/oracle-free:23.7-slim-faststart
+          image: gvenzl/oracle-free:23.7-slim
           ports:
             - containerPort: 1521
           env:

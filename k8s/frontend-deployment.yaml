@@ -18,10 +18,14 @@ spec:
         runAsUser: 101
         runAsGroup: 101
         fsGroup: 101
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: frontend-nginx-conf
       containers:
         - name: frontend
           image: ghcr.io/genersuhul/airport-frontend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           readinessProbe:
@@ -43,6 +47,11 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

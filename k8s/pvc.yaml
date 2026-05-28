@@ -4,6 +4,7 @@ metadata:
   name: oracle-data
   namespace: airport
 spec:
+  storageClassName: local-path
   accessModes:
     - ReadWriteOnce
   resources:

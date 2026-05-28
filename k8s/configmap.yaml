@@ -4,10 +4,10 @@ metadata:
   name: airport-config
   namespace: airport
 data:
-  DB_URL: jdbc:oracle:thin:@oracle:1521/FREEPDB1
+  DB_URL: jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=oracle.airport.svc.cluster.local)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=FREEPDB1)))
   DB_USERNAME: AIRPORT
   ADMIN_EMAIL: admin@airport.local
-  CORS_ALLOWED_ORIGINS: https://airport.example.com
+  CORS_ALLOWED_ORIGINS: http://umg.kyrosoftgs.com,https://umg.kyrosoftgs.com,http://75.119.134.77:18080,http://75.119.134.77:30270
   PAYMENT_APPROVAL_RATE: "0.88"
 ---
 apiVersion: v1

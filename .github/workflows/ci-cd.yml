@@ -144,12 +144,15 @@ jobs:
           kubectl get nodes -o wide
 
       - name: Apply Kubernetes manifests
-        run: kubectl apply --validate=false -f k8s/
+        run: |
+          kubectl apply --validate=false -f k8s/namespace.yaml
+          kubectl apply --validate=false -f k8s/
 
       - name: Wait rollout
         run: |
           kubectl -n airport rollout status deployment/oracle --timeout=15m
           kubectl -n airport rollout status deployment/backend --timeout=5m
           kubectl -n airport rollout status deployment/frontend --timeout=5m
+          kubectl -n airport rollout status deployment/edge-proxy --timeout=5m
           kubectl -n airport rollout status deployment/prometheus --timeout=5m
           kubectl -n airport rollout status deployment/grafana --timeout=5m
