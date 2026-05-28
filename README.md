@@ -220,24 +220,41 @@ Pipeline:
 2. Build frontend Angular.
 3. Build Docker images.
 4. Push a GHCR.
-5. Deploy Kubernetes.
+5. Deploy Kubernetes solo cuando se ejecuta manualmente con `deploy=true`.
+
+En cada push a `main`, el workflow construye y publica las imágenes. No intenta desplegar automáticamente porque el cluster VPS puede no existir todavía.
 
 Configura en GitHub:
 
 - `Settings > Actions > General > Workflow permissions`: Read and write permissions.
 - Secret `KUBE_CONFIG_B64`: kubeconfig del cluster en base64.
 
-Generar kubeconfig base64:
+Generar kubeconfig base64 en el VPS control-plane:
 
 ```bash
+mkdir -p ~/.kube
+sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo chown "$USER:$USER" ~/.kube/config
+sed -i "s|https://127.0.0.1:6443|https://PUBLIC_OR_PRIVATE_CONTROL_PLANE_IP:6443|g" ~/.kube/config
+kubectl get nodes
 base64 -w0 ~/.kube/config
 ```
+
+El error `Get "http://localhost:8080/openapi/v2": connect: connection refused` en GitHub Actions significa que el runner no recibió un kubeconfig válido o el kubeconfig apunta a localhost. Corrige `KUBE_CONFIG_B64` y asegúrate de abrir el puerto `6443/tcp` del API server solo para IPs confiables.
 
 El workflow está en:
 
 ```text
 .github/workflows/ci-cd.yml
 ```
+
+Cuando el VPS y el cluster ya existan:
+
+1. En GitHub entra a `Actions`.
+2. Selecciona `Airport Platform CI/CD`.
+3. Usa `Run workflow`.
+4. Selecciona `deploy=true`.
+5. Ejecuta el workflow.
 
 ## Flyway
 

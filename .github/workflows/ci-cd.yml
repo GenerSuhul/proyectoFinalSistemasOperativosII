@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: ["main"]
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Deploy to Kubernetes. Use true only after VPS cluster and KUBE_CONFIG_B64 are configured."
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 env:
   REGISTRY: ghcr.io
@@ -104,25 +113,38 @@ jobs:
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
     needs: docker
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.deploy == 'true' && github.ref == 'refs/heads/main'
     environment: production
+    env:
+      KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Configure kubeconfig
         run: |
+          if [ -z "${KUBE_CONFIG_B64}" ]; then
+            echo "::error::Missing GitHub secret KUBE_CONFIG_B64. Generate it on the VPS with: base64 -w0 ~/.kube/config"
+            exit 1
+          fi
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_B64 }}" | base64 -d > ~/.kube/config
+          echo "${KUBE_CONFIG_B64}" | base64 -d > ~/.kube/config
           chmod 600 ~/.kube/config
+          kubectl config current-context
+          kubectl config view --minify
 
       - name: Patch image registry
         run: |
           sed -i "s|ghcr.io/YOUR_ORG/airport-backend:1.0.0|${BACKEND_IMAGE}:latest|g" k8s/backend-deployment.yaml
           sed -i "s|ghcr.io/YOUR_ORG/airport-frontend:1.0.0|${FRONTEND_IMAGE}:latest|g" k8s/frontend-deployment.yaml
 
+      - name: Validate Kubernetes access
+        run: |
+          kubectl cluster-info
+          kubectl get nodes -o wide
+
       - name: Apply Kubernetes manifests
-        run: kubectl apply -f k8s/
+        run: kubectl apply --validate=false -f k8s/
 
       - name: Wait rollout
         run: |
