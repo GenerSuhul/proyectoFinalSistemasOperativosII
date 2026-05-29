@@ -41,7 +41,7 @@ public class ReservationController {
         byte[] pdf = ticketPdfService.render(reservationService.confirmedTicket(authentication.getName(), admin, code));
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ticket-" + code + ".pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=ticket-" + code + ".pdf")
                 .body(pdf);
     }
 }

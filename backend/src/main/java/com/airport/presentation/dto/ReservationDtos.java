@@ -24,5 +24,6 @@ public final class ReservationDtos {
                                       String seatNumber, BigDecimal amount, ReservationStatus status,
                                       Instant createdAt) {}
 
-    public record PaymentResponse(Long id, String authorizationCode, PaymentStatus status, BigDecimal amount) {}
+    public record PaymentResponse(Long id, String authorizationCode, PaymentStatus status, BigDecimal amount,
+                                  boolean ticketEmailSent) {}
 }

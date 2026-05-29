@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { environment } from './environment';
-import { Airplane, Airport, Dashboard, Flight, Reservation, Seat } from './models';
+import { Airplane, Airport, Dashboard, Flight, PaymentResponse, Reservation, Seat } from './models';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -18,7 +18,7 @@ export class ApiService {
   }
   seats(flightId: number) { return this.http.get<Seat[]>(`${this.api}/api/flights/${flightId}/seats`); }
   reserve(flightId: number, seatNumber: string) { return this.http.post<Reservation>(`${this.api}/api/reservations`, { flightId, seatNumber }); }
-  pay(code: string, payment: any) { return this.http.post(`${this.api}/api/reservations/${code}/pay`, payment); }
+  pay(code: string, payment: any) { return this.http.post<PaymentResponse>(`${this.api}/api/reservations/${code}/pay`, payment); }
   myReservations() { return this.http.get<Reservation[]>(`${this.api}/api/reservations/me`); }
   ticket(code: string) { return this.http.get(`${this.api}/api/reservations/${code}/ticket`, { responseType: 'blob' }); }
   dashboard() { return this.http.get<Dashboard>(`${this.api}/api/admin/dashboard`); }
