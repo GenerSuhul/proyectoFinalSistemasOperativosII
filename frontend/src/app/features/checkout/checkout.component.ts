@@ -19,7 +19,7 @@ import { Flight, Seat } from '../../core/models';
           <div>
             <span class="eyebrow">Vuelo seleccionado</span>
             <h1>{{f.origin.city}} a {{f.destination.city}}</h1>
-            <p>{{f.flightNumber}} · {{f.airplane.model}} · {{f.departureTime | date:'EEEE d MMM, HH:mm'}}</p>
+            <p>{{f.flightNumber}} - {{f.airplane.model}} - {{f.departureTime | date:'EEEE d MMM, HH:mm'}}</p>
           </div>
           <div class="price">
             <span>Total</span>

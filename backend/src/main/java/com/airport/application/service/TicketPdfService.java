@@ -162,7 +162,7 @@ public class TicketPdfService {
                 .setPadding(18)
                 .add(new Paragraph(code).setBold().setFontSize(40).setFontColor(BRAND_DARK))
                 .add(new Paragraph(city).setBold().setFontSize(14).setFontColor(INK))
-                .add(new Paragraph(airport).setFontSize(10).setFontColor(new DeviceRgb(79, 93, 110))));
+                .add(new Paragraph(airport).setFontSize(10).setFontColor(new DeviceRgb(79, 93, 110)));
     }
 
     private Cell detail(String label, String value, int colspan) {

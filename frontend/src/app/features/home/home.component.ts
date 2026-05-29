@@ -108,9 +108,9 @@ import { Flight } from '../../core/models';
           @for (flight of flights(); track flight.id) {
             <article class="flight-card">
               <div>
-                <span class="eyebrow">{{flight.flightNumber}} · {{flight.airplane.airline}}</span>
+                <span class="eyebrow">{{flight.flightNumber}} - {{flight.airplane.airline}}</span>
                 <h3>{{flight.origin.city}} a {{flight.destination.city}}</h3>
-                <p>{{flight.origin.iataCode}} - {{flight.destination.iataCode}} · {{flight.departureTime | date:'EEE d MMM, HH:mm'}} - {{flight.arrivalTime | date:'HH:mm'}}</p>
+                <p>{{flight.origin.iataCode}} - {{flight.destination.iataCode}} - {{flight.departureTime | date:'EEE d MMM, HH:mm'}} - {{flight.arrivalTime | date:'HH:mm'}}</p>
               </div>
               <div class="fare">
                 <span>Desde</span>

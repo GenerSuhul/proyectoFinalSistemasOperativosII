@@ -31,7 +31,7 @@ import { Reservation } from '../../core/models';
               <div class="ticket-route">
                 <span>{{reservation.flightNumber}}</span>
                 <h2>{{reservation.route}}</h2>
-                <p>Reserva {{reservation.code}} · Emitida {{reservation.createdAt | date:'mediumDate'}}</p>
+                <p>Reserva {{reservation.code}} - Emitida {{reservation.createdAt | date:'mediumDate'}}</p>
               </div>
               <div class="ticket-meta">
                 <div>
@@ -212,9 +212,14 @@ export class ClientDashboardComponent {
   }
 
   openTicket(code: string) {
+    const ticketWindow = window.open('', '_blank');
     this.api.ticket(code).subscribe(blob => {
       const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
+      if (ticketWindow) {
+        ticketWindow.location.href = url;
+      } else {
+        window.location.href = url;
+      }
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
     });
   }
