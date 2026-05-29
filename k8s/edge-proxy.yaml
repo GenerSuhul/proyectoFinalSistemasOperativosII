@@ -36,6 +36,9 @@ data:
 
     prometheus.umg.kyrosoftgs.com {
       encode gzip zstd
+      basicauth {
+        admin $2a$10$NYbxPEmbPfLsXWm1MOeFqedocsfbPetOySqhjzV2vpFA.HtqWMqXC
+      }
       reverse_proxy prometheus.airport.svc.cluster.local:9090
     }
 ---

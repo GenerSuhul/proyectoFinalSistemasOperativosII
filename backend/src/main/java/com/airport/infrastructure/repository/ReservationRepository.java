@@ -14,5 +14,8 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     @EntityGraph(attributePaths = {"user", "flight", "flight.origin", "flight.destination", "flight.airplane", "seat"})
     Optional<Reservation> findByCode(String code);
 
+    @EntityGraph(attributePaths = {"user", "flight", "flight.origin", "flight.destination", "flight.airplane", "seat"})
+    List<Reservation> findTop80ByOrderByCreatedAtDesc();
+
     long countByStatus(ReservationStatus status);
 }

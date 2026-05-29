@@ -21,11 +21,11 @@ import { AuthService } from '../../core/auth.service';
         <h2>Iniciar sesion</h2>
         <label>
           <span>Email</span>
-          <input type="email" [(ngModel)]="email">
+          <input type="email" autocomplete="username" [(ngModel)]="email" placeholder="tu-correo@dominio.com">
         </label>
         <label>
           <span>Contrasena</span>
-          <input type="password" [(ngModel)]="password">
+          <input type="password" autocomplete="current-password" [(ngModel)]="password" placeholder="Tu contrasena">
         </label>
         @if (error()) { <p class="error"><mat-icon>error</mat-icon>{{error()}}</p> }
         <button mat-flat-button color="primary" (click)="submit()">Entrar</button>
@@ -114,14 +114,18 @@ import { AuthService } from '../../core/auth.service';
 export class LoginComponent {
   private auth = inject(AuthService);
   private router = inject(Router);
-  email = 'admin@airport.local';
-  password = 'Admin12345!';
+  email = '';
+  password = '';
   error = signal('');
 
   submit() {
     this.error.set('');
+    if (!this.email || !this.password) {
+      this.error.set('Ingresa tu correo y contrasena.');
+      return;
+    }
     this.auth.login(this.email, this.password).subscribe({
-      next: () => this.router.navigateByUrl('/'),
+      next: response => this.router.navigateByUrl(response.user.role === 'ADMIN' ? '/admin' : '/'),
       error: err => this.error.set(err?.error?.message ?? 'Credenciales invalidas.')
     });
   }

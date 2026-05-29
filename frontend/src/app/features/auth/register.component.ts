@@ -16,19 +16,19 @@ import { AuthService } from '../../core/auth.service';
         <div class="form-grid">
           <label>
             <span>Nombre completo</span>
-            <input [(ngModel)]="fullName">
+            <input autocomplete="name" [(ngModel)]="fullName">
           </label>
           <label>
             <span>Email</span>
-            <input type="email" [(ngModel)]="email">
+            <input type="email" autocomplete="email" [(ngModel)]="email">
           </label>
           <label>
             <span>Contrasena</span>
-            <input type="password" [(ngModel)]="password">
+            <input type="password" autocomplete="new-password" [(ngModel)]="password">
           </label>
           <label>
             <span>Telefono</span>
-            <input [(ngModel)]="phone">
+            <input autocomplete="tel" [(ngModel)]="phone">
           </label>
           <label>
             <span>Documento</span>
@@ -124,6 +124,10 @@ export class RegisterComponent {
 
   submit() {
     this.error.set('');
+    if (!this.fullName || !this.email || this.password.length < 8) {
+      this.error.set('Completa nombre, correo y una contrasena de al menos 8 caracteres.');
+      return;
+    }
     this.auth.register({
       fullName: this.fullName,
       email: this.email,

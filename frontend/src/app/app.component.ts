@@ -38,7 +38,7 @@ import { AuthService } from './core/auth.service';
           <a routerLink="/">Ofertas y destinos</a>
           @if (isLogged()) { <a routerLink="/client">Tu reserva</a> }
           @if (isAdmin()) { <a routerLink="/admin">Operacion</a> }
-          <a routerLink="/" class="nav-chip">Check-in</a>
+          <a [routerLink]="isLogged() ? '/client' : '/login'" class="nav-chip">Check-in</a>
         </div>
 
         <div class="account-actions">

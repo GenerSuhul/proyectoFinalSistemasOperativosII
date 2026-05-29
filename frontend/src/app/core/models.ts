@@ -8,3 +8,29 @@ export interface Reservation { id: number; code: string; flightId: number; fligh
 export interface PaymentResponse { id: number; authorizationCode: string; status: string; amount: number; ticketEmailSent: boolean; ticketEmailMessage: string; }
 export interface TicketEmailResponse { sent: boolean; message: string; }
 export interface Dashboard { sales: number; activeFlights: number; registeredUsers: number; confirmedReservations: number; }
+export interface AdminReservation {
+  id: number;
+  code: string;
+  status: string;
+  passengerName: string;
+  passengerEmail: string;
+  documentNumber?: string;
+  flightNumber: string;
+  route: string;
+  originCity: string;
+  destinationCity: string;
+  departureTime: string;
+  seatNumber: string;
+  amount: number;
+  authorizationCode?: string;
+  createdAt: string;
+}
+export interface AdminUser {
+  id: number;
+  fullName: string;
+  email: string;
+  role: 'ADMIN' | 'CLIENT';
+  phone?: string;
+  documentNumber?: string;
+  createdAt: string;
+}

@@ -63,20 +63,20 @@ import { Flight, Seat } from '../../core/models';
 
           <label>
             <span>Numero de tarjeta</span>
-            <input [(ngModel)]="cardNumber" inputmode="numeric" maxlength="19">
+            <input [(ngModel)]="cardNumber" inputmode="numeric" maxlength="19" autocomplete="cc-number" placeholder="4111 1111 1111 1111">
           </label>
           <label>
             <span>Titular</span>
-            <input [(ngModel)]="cardHolder">
+            <input [(ngModel)]="cardHolder" autocomplete="cc-name" placeholder="Nombre como aparece en la tarjeta">
           </label>
           <div class="payment-row">
             <label>
               <span>Vence</span>
-              <input [(ngModel)]="expiry" maxlength="5">
+              <input [(ngModel)]="expiry" maxlength="5" autocomplete="cc-exp" placeholder="MM/AA">
             </label>
             <label>
               <span>CVV</span>
-              <input [(ngModel)]="cvv" maxlength="4">
+              <input [(ngModel)]="cvv" maxlength="4" autocomplete="cc-csc" placeholder="123">
             </label>
           </div>
 
@@ -259,10 +259,10 @@ export class CheckoutComponent {
   selected = '';
   submitting = signal(false);
   error = signal('');
-  cardNumber = '4111111111111111';
-  cardHolder = 'Cliente Demo';
-  expiry = '12/30';
-  cvv = '123';
+  cardNumber = '';
+  cardHolder = '';
+  expiry = '';
+  cvv = '';
 
   ngOnInit() {
     this.api.flights().subscribe(flights => this.flight.set(flights.find(f => f.id === this.flightId) ?? null));
@@ -271,6 +271,10 @@ export class CheckoutComponent {
 
   checkout() {
     if (!this.selected || this.submitting()) {
+      return;
+    }
+    if (!this.cardNumber || !this.cardHolder || !this.expiry || !this.cvv) {
+      this.error.set('Completa los datos de pago para emitir el ticket.');
       return;
     }
     this.error.set('');

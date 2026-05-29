@@ -36,7 +36,7 @@ app:
     approval-rate: ${PAYMENT_APPROVAL_RATE:0.88}
   mail:
     enabled: ${MAIL_ENABLED:true}
-    from: ${MAIL_FROM:Airport Platform <onboarding@resend.dev>}
+    from: ${MAIL_FROM:Airport Platform <tickets@kyrosoftgs.com>}
   resend:
     api-key: ${RESEND_API_KEY:}
 

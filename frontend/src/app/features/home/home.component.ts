@@ -6,7 +6,7 @@ import { animate, query, stagger, style, transition, trigger } from '@angular/an
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
-import { Flight } from '../../core/models';
+import { Airport, Flight } from '../../core/models';
 
 @Component({
   standalone: true,
@@ -34,23 +34,51 @@ import { Flight } from '../../core/models';
       <div class="hero-content" @heroIn>
         <div class="booking-panel">
           <div class="booking-tabs">
-            <button class="tab active"><span></span> Ida y vuelta</button>
-            <button class="tab"><span></span> Solo ida</button>
-            <button class="tab wide"><mat-icon>credit_card</mat-icon> Reservar con creditos</button>
-            <button class="tab wide"><mat-icon>hotel</mat-icon> Hoteles</button>
-            <button class="tab wide"><mat-icon>directions_car</mat-icon> Autos</button>
+            <button type="button" class="tab" [class.active]="tripType === 'round'" (click)="tripType = 'round'"><span></span> Ida y vuelta</button>
+            <button type="button" class="tab" [class.active]="tripType === 'oneway'" (click)="tripType = 'oneway'"><span></span> Solo ida</button>
+            <button type="button" class="tab wide" [class.active]="useCredits" (click)="useCredits = !useCredits"><mat-icon>credit_card</mat-icon> Reservar con creditos</button>
           </div>
 
           <div class="search-card">
             <label class="field">
               <mat-icon>flight_takeoff</mat-icon>
               <span>Origen</span>
-              <input [(ngModel)]="origin" maxlength="3" placeholder="GUA" (input)="origin = origin.toUpperCase()">
+              <input
+                [(ngModel)]="originText"
+                placeholder="Ciudad de Guatemala"
+                (focus)="activePicker = 'origin'"
+                (input)="onAirportInput('origin')">
+              @if (activePicker === 'origin') {
+                <div class="airport-menu">
+                  @for (airport of filteredAirports(originText); track airport.id) {
+                    <button type="button" (mousedown)="pickAirport('origin', airport)">
+                      <strong>{{airport.city}}</strong>
+                      <span>{{airport.country}}</span>
+                      <em>{{airport.iataCode}}</em>
+                    </button>
+                  }
+                </div>
+              }
             </label>
             <label class="field">
               <mat-icon>flight_land</mat-icon>
               <span>Destino</span>
-              <input [(ngModel)]="destination" maxlength="3" placeholder="MIA" (input)="destination = destination.toUpperCase()">
+              <input
+                [(ngModel)]="destinationText"
+                placeholder="Elige destino"
+                (focus)="activePicker = 'destination'"
+                (input)="onAirportInput('destination')">
+              @if (activePicker === 'destination') {
+                <div class="airport-menu">
+                  @for (airport of filteredAirports(destinationText); track airport.id) {
+                    <button type="button" (mousedown)="pickAirport('destination', airport)">
+                      <strong>{{airport.city}}</strong>
+                      <span>{{airport.country}}</span>
+                      <em>{{airport.iataCode}}</em>
+                    </button>
+                  }
+                </div>
+              }
             </label>
             <label class="field date">
               <mat-icon>calendar_month</mat-icon>
@@ -60,7 +88,7 @@ import { Flight } from '../../core/models';
             <label class="field date">
               <mat-icon>event_repeat</mat-icon>
               <span>Vuelta</span>
-              <strong>03/06/2026</strong>
+              <strong>{{tripType === 'round' ? '03/06/2026' : '-'}}</strong>
             </label>
             <label class="field passengers">
               <mat-icon>group_add</mat-icon>
@@ -93,7 +121,7 @@ import { Flight } from '../../core/models';
       </section>
 
       <section class="offers-head">
-        <h2>Ofertas desde <button type="button" (click)="origin = 'GUA'; load()">Ciudad de Guatemala</button></h2>
+        <h2>Ofertas desde <button type="button" (click)="setOrigin('GUA')">Ciudad de Guatemala</button></h2>
         <div class="destination-pills">
           @for (item of quickDestinations; track item.code) {
             <button type="button" (click)="pickDestination(item.code)">
@@ -105,7 +133,7 @@ import { Flight } from '../../core/models';
 
       <section class="destination-showcase">
         @for (card of destinationCards; track card.code) {
-          <article [style.backgroundImage]="'linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.62)), url(' + card.image + ')'">
+          <article [style.background-image]="destinationBackground(card.image)">
             <span>{{card.code}}</span>
             <h3>{{card.city}}</h3>
             <p>{{card.copy}}</p>
@@ -202,6 +230,10 @@ import { Flight } from '../../core/models';
     .tab.active span {
       border: 7px solid #24bf50;
     }
+    .tab.active {
+      box-shadow: inset 0 0 0 2px rgba(36, 191, 80, .2);
+      font-weight: 900;
+    }
     .tab.wide mat-icon { font-size: 20px; height: 20px; width: 20px; }
     .search-card {
       align-items: stretch;
@@ -221,6 +253,7 @@ import { Flight } from '../../core/models';
       grid-template-columns: 36px 1fr;
       min-height: 66px;
       padding: 10px 14px;
+      position: relative;
     }
     .field mat-icon { grid-row: span 2; }
     .field span {
@@ -235,6 +268,51 @@ import { Flight } from '../../core/models';
       font-weight: 800;
       outline: 0;
       width: 100%;
+    }
+    .airport-menu {
+      background: white;
+      border: 1px solid #d7e1e9;
+      border-radius: 14px;
+      box-shadow: 0 22px 52px rgba(17, 31, 43, .18);
+      display: grid;
+      gap: 4px;
+      left: 0;
+      max-height: 320px;
+      overflow: auto;
+      padding: 10px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 40;
+    }
+    .airport-menu button {
+      align-items: center;
+      background: white;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      display: grid;
+      gap: 2px 12px;
+      grid-template-columns: 1fr auto;
+      padding: 12px 14px;
+      text-align: left;
+    }
+    .airport-menu button:hover {
+      background: #edf9fc;
+    }
+    .airport-menu strong {
+      font-size: 16px;
+    }
+    .airport-menu span {
+      color: #5f6c78;
+      font-size: 13px;
+    }
+    .airport-menu em {
+      color: #00839a;
+      font-style: normal;
+      font-weight: 900;
+      grid-column: 2;
+      grid-row: 1 / span 2;
     }
     .field strong { font-size: 20px; }
     .search-button {
@@ -501,10 +579,17 @@ import { Flight } from '../../core/models';
 export class HomeComponent {
   private api = inject(ApiService);
   flights = signal<Flight[]>([]);
+  airports = signal<Airport[]>([]);
   origin = 'GUA';
   destination = '';
+  originText = 'Ciudad de Guatemala (GUA)';
+  destinationText = '';
+  activePicker: 'origin' | 'destination' | '' = '';
+  tripType: 'round' | 'oneway' = 'round';
+  useCredits = false;
   passengers = 1;
   quickDestinations = [
+    { city: 'Flores', code: 'FRS' },
     { city: 'Miami', code: 'MIA' },
     { city: 'Panama', code: 'PTY' },
     { city: 'Bogota', code: 'BOG' },
@@ -514,6 +599,12 @@ export class HomeComponent {
     { city: 'Lima', code: 'LIM' }
   ];
   destinationCards = [
+    {
+      city: 'Flores',
+      code: 'FRS',
+      copy: 'Mundo Maya, escapadas nacionales y tickets listos con QR.',
+      image: 'https://images.unsplash.com/photo-1566310095519-1d8358361b2d?auto=format&fit=crop&w=900&q=80'
+    },
     {
       city: 'Cartagena y Bogota',
       code: 'BOG',
@@ -535,7 +626,11 @@ export class HomeComponent {
   ];
 
   ngOnInit() {
-    this.load();
+    this.api.airports().subscribe(airports => {
+      this.airports.set(airports);
+      this.syncAirportText();
+      this.load();
+    });
   }
 
   load() {
@@ -543,16 +638,75 @@ export class HomeComponent {
     const destination = this.clean(this.destination);
     this.origin = origin;
     this.destination = destination;
+    this.activePicker = '';
     this.api.flights(origin || undefined, destination || undefined).subscribe(flights => this.flights.set(flights));
   }
 
   pickDestination(code: string) {
     this.origin = 'GUA';
     this.destination = code;
+    this.syncAirportText();
     this.load();
+  }
+
+  setOrigin(code: string) {
+    this.origin = code;
+    this.destination = '';
+    this.syncAirportText();
+    this.load();
+  }
+
+  pickAirport(target: 'origin' | 'destination', airport: Airport) {
+    if (target === 'origin') {
+      this.origin = airport.iataCode;
+      this.originText = this.airportLabel(airport);
+    } else {
+      this.destination = airport.iataCode;
+      this.destinationText = this.airportLabel(airport);
+    }
+    this.activePicker = '';
+  }
+
+  onAirportInput(target: 'origin' | 'destination') {
+    if (target === 'origin') {
+      this.origin = this.codeFromText(this.originText);
+    } else {
+      this.destination = this.codeFromText(this.destinationText);
+    }
+  }
+
+  filteredAirports(query: string) {
+    const needle = this.clean(query);
+    return this.airports()
+      .filter(airport => {
+        const haystack = `${airport.city} ${airport.country} ${airport.iataCode}`.toUpperCase();
+        return !needle || haystack.includes(needle);
+      })
+      .slice(0, 8);
+  }
+
+  destinationBackground(image: string) {
+    return `linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.62)), url(${image})`;
   }
 
   private clean(value: string) {
     return value.trim().toUpperCase();
+  }
+
+  private codeFromText(value: string) {
+    const cleaned = this.clean(value);
+    const exact = this.airports().find(airport => airport.iataCode === cleaned);
+    return exact ? exact.iataCode : cleaned.length === 3 ? cleaned : '';
+  }
+
+  private syncAirportText() {
+    const origin = this.airports().find(airport => airport.iataCode === this.origin);
+    const destination = this.airports().find(airport => airport.iataCode === this.destination);
+    this.originText = origin ? this.airportLabel(origin) : this.origin;
+    this.destinationText = destination ? this.airportLabel(destination) : '';
+  }
+
+  private airportLabel(airport: Airport) {
+    return `${airport.city} (${airport.iataCode})`;
   }
 }

@@ -67,7 +67,8 @@ public class TicketEmailService {
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 log.error("Resend rechazo el envio del ticket {} con status {}: {}",
                         reservation.getCode(), response.statusCode(), response.body());
-                return new EmailResult(false, "Resend rechazo el correo con status " + response.statusCode() + ".");
+                return new EmailResult(false, "Resend rechazo el correo con status " + response.statusCode()
+                        + ": " + compact(response.body()));
             }
 
             log.info("Ticket {} enviado a {}", reservation.getCode(), reservation.getUser().getEmail());
@@ -118,5 +119,13 @@ public class TicketEmailService {
                 .replace("<", "&lt;")
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;");
+    }
+
+    private String compact(String value) {
+        if (value == null || value.isBlank()) {
+            return "sin detalle";
+        }
+        String clean = value.replaceAll("\\s+", " ").trim();
+        return clean.length() > 180 ? clean.substring(0, 180) + "..." : clean;
     }
 }

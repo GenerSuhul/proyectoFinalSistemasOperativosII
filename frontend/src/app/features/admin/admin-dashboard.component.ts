@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { ApiService } from '../../core/api.service';
-import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
+import { AdminReservation, AdminUser, Airplane, Airport, Dashboard, Flight } from '../../core/models';
 
 @Component({
   standalone: true,
@@ -13,21 +13,56 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
     <main class="admin-shell">
       <section class="admin-hero">
         <div>
-          <span class="eyebrow">Operacion AeroNova</span>
-          <h1>Centro de control de vuelos</h1>
-          <p>Administra destinos, flota, disponibilidad y vuelos publicados para el cliente final.</p>
+          <span class="eyebrow">CRM AeroNova</span>
+          <h1>Operacion, ventas y experiencia del pasajero</h1>
+          <p>Publica rutas, controla inventario, revisa tickets vendidos y da seguimiento a cada cliente.</p>
         </div>
         <button mat-flat-button color="primary" (click)="reload()"><mat-icon>refresh</mat-icon> Actualizar</button>
       </section>
 
       @if (dashboard(); as d) {
         <section class="metrics">
-          <article><span>Ventas</span><strong>{{d.sales | currency:'USD'}}</strong></article>
+          <article><span>Ventas aprobadas</span><strong>{{d.sales | currency:'USD'}}</strong></article>
           <article><span>Vuelos activos</span><strong>{{d.activeFlights}}</strong></article>
           <article><span>Usuarios</span><strong>{{d.registeredUsers}}</strong></article>
-          <article><span>Reservas confirmadas</span><strong>{{d.confirmedReservations}}</strong></article>
+          <article><span>Tickets confirmados</span><strong>{{d.confirmedReservations}}</strong></article>
         </section>
       }
+
+      <section class="crm-section">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Ventas y soporte</span>
+            <h2>Tickets vendidos</h2>
+          </div>
+          <span>{{reservations().length}} registros recientes</span>
+        </div>
+        <div class="reservation-list">
+          @for (item of reservations(); track item.id) {
+            <article>
+              <div class="route">
+                <strong>{{item.flightNumber}} - {{item.route}}</strong>
+                <span>{{item.originCity}} a {{item.destinationCity}} - {{item.departureTime | date:'dd MMM HH:mm'}}</span>
+              </div>
+              <div>
+                <strong>{{item.passengerName}}</strong>
+                <span>{{item.passengerEmail}}</span>
+              </div>
+              <div>
+                <strong>{{item.seatNumber}}</strong>
+                <span>{{item.status}}</span>
+              </div>
+              <div class="amount">{{item.amount | currency:'USD'}}</div>
+              <div class="actions">
+                <button mat-stroked-button (click)="openTicket(item.code)"><mat-icon>picture_as_pdf</mat-icon> PDF</button>
+                <button mat-stroked-button (click)="sendEmail(item.code)"><mat-icon>mail</mat-icon> Correo</button>
+              </div>
+            </article>
+          } @empty {
+            <p class="empty">Aun no hay reservas registradas.</p>
+          }
+        </div>
+      </section>
 
       <section class="ops-grid">
         <form class="ops-card wide" (ngSubmit)="createFlight()">
@@ -35,7 +70,7 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
             <mat-icon>flight_takeoff</mat-icon>
             <div>
               <h2>Publicar vuelo</h2>
-              <p>Este vuelo aparece inmediatamente en la busqueda del usuario final.</p>
+              <p>Este vuelo queda disponible inmediatamente en la busqueda del usuario final.</p>
             </div>
           </div>
 
@@ -130,7 +165,10 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
 
       <section class="published">
         <div class="section-head">
-          <h2>Vuelos publicados</h2>
+          <div>
+            <span class="eyebrow">Inventario</span>
+            <h2>Vuelos publicados</h2>
+          </div>
           <span>{{flights().length}} activos</span>
         </div>
         <div class="flight-table">
@@ -147,6 +185,25 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
           }
         </div>
       </section>
+
+      <section class="crm-section">
+        <div class="section-head">
+          <div>
+            <span class="eyebrow">Clientes</span>
+            <h2>Directorio de usuarios</h2>
+          </div>
+          <span>{{users().length}} recientes</span>
+        </div>
+        <div class="users-grid">
+          @for (user of users(); track user.id) {
+            <article>
+              <strong>{{user.fullName}}</strong>
+              <span>{{user.email}}</span>
+              <small>{{user.role}} - {{user.documentNumber || 'sin documento'}}</small>
+            </article>
+          }
+        </div>
+      </section>
     </main>
   `,
   styles: [`
@@ -154,32 +211,36 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
       display: grid;
       gap: 22px;
       margin: 0 auto;
-      max-width: 1280px;
+      max-width: 1360px;
       padding: 34px 20px;
     }
     .admin-hero {
       align-items: center;
-      background: linear-gradient(120deg, #111827, #00576e);
+      background:
+        linear-gradient(120deg, rgba(17, 24, 39, .96), rgba(0, 87, 110, .92)),
+        url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?auto=format&fit=crop&w=1600&q=80') center/cover;
       border-radius: 18px;
       color: white;
       display: flex;
       justify-content: space-between;
-      min-height: 220px;
+      min-height: 260px;
       padding: clamp(28px, 5vw, 54px);
     }
     .eyebrow {
-      color: #a7ecf5;
+      color: #0089a4;
       font-size: 12px;
       font-weight: 900;
       letter-spacing: .12em;
       text-transform: uppercase;
     }
+    .admin-hero .eyebrow { color: #a7ecf5; }
     .admin-hero h1 {
-      font-size: clamp(36px, 6vw, 64px);
+      font-size: clamp(38px, 6vw, 66px);
       line-height: .98;
       margin: 8px 0;
+      max-width: 880px;
     }
-    .admin-hero p { font-size: 18px; margin: 0; max-width: 620px; }
+    .admin-hero p { font-size: 18px; margin: 0; max-width: 680px; }
     .metrics {
       display: grid;
       gap: 14px;
@@ -187,7 +248,8 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
     }
     .metrics article,
     .ops-card,
-    .published {
+    .published,
+    .crm-section {
       background: white;
       border: 1px solid #dce7ef;
       border-radius: 12px;
@@ -196,6 +258,35 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
     .metrics article { padding: 20px; }
     .metrics span { color: #657484; font-weight: 800; }
     .metrics strong { display: block; font-size: 32px; margin-top: 6px; }
+    .section-head {
+      align-items: center;
+      background: #f3f8fb;
+      display: flex;
+      justify-content: space-between;
+      padding: 18px 22px;
+    }
+    .section-head h2 { margin: 3px 0 0; }
+    .section-head > span { color: #657484; font-weight: 900; }
+    .reservation-list article {
+      align-items: center;
+      border-top: 1px solid #edf2f6;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1.5fr 1.1fr .55fr .6fr auto;
+      padding: 18px 22px;
+    }
+    .reservation-list strong,
+    .reservation-list span,
+    .users-grid strong,
+    .users-grid span,
+    .users-grid small { display: block; }
+    .reservation-list span,
+    .users-grid span,
+    .users-grid small { color: #657484; margin-top: 4px; }
+    .amount,
+    .price { font-weight: 900; text-align: right; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .empty { color: #657484; margin: 0; padding: 24px; }
     .ops-grid {
       display: grid;
       gap: 18px;
@@ -272,37 +363,42 @@ import { Airplane, Airport, Dashboard, Flight } from '../../core/models';
       color: #b00020;
     }
     .published { overflow: hidden; }
-    .section-head,
     .flight-table article {
       align-items: center;
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 1fr .8fr;
-      gap: 16px;
-      padding: 18px 22px;
-    }
-    .section-head {
-      background: #f3f8fb;
-      font-weight: 900;
-    }
-    .section-head h2 { margin: 0; }
-    .flight-table article {
       border-top: 1px solid #edf2f6;
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1.5fr 1fr 1fr .8fr;
+      padding: 18px 22px;
     }
     .flight-table strong,
     .flight-table span { display: block; }
     .flight-table span { color: #657484; margin-top: 4px; }
-    .price { font-weight: 900; text-align: right; }
-    @media (max-width: 980px) {
+    .users-grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 22px;
+    }
+    .users-grid article {
+      border: 1px solid #edf2f6;
+      border-radius: 10px;
+      padding: 16px;
+    }
+    @media (max-width: 1100px) {
       .admin-hero,
       .metrics,
       .ops-grid,
       .form-grid,
-      .section-head,
-      .flight-table article {
+      .reservation-list article,
+      .flight-table article,
+      .users-grid {
         grid-template-columns: 1fr;
       }
       .admin-hero { display: grid; }
+      .amount,
       .price { text-align: left; }
+      .actions { justify-content: flex-start; }
     }
   `]
 })
@@ -312,6 +408,8 @@ export class AdminDashboardComponent {
   airports = signal<Airport[]>([]);
   airplanes = signal<Airplane[]>([]);
   flights = signal<Flight[]>([]);
+  reservations = signal<AdminReservation[]>([]);
+  users = signal<AdminUser[]>([]);
   message = signal('');
   error = signal('');
 
@@ -334,10 +432,12 @@ export class AdminDashboardComponent {
 
   reload() {
     this.api.dashboard().subscribe(dashboard => this.dashboard.set(dashboard));
+    this.api.adminReservations().subscribe(reservations => this.reservations.set(reservations));
+    this.api.adminUsers().subscribe(users => this.users.set(users));
     this.api.airports().subscribe(airports => {
       this.airports.set(airports);
       this.flight.originId ||= airports.find(a => a.iataCode === 'GUA')?.id ?? airports[0]?.id ?? 0;
-      this.flight.destinationId ||= airports.find(a => a.iataCode === 'MIA')?.id ?? airports[1]?.id ?? 0;
+      this.flight.destinationId ||= airports.find(a => a.iataCode === 'FRS')?.id ?? airports[1]?.id ?? 0;
     });
     this.api.airplanes().subscribe(airplanes => {
       this.airplanes.set(airplanes);
@@ -362,7 +462,7 @@ export class AdminDashboardComponent {
     this.clear();
     this.api.createAirplane(this.airplane).subscribe({
       next: () => {
-        this.airplane = { model: '', capacity: 0, airline: '' };
+        this.airplane = { model: 'Airbus A320neo', capacity: 60, airline: 'AeroNova' };
         this.message.set('Avion guardado.');
         this.reload();
       },
@@ -387,6 +487,27 @@ export class AdminDashboardComponent {
         this.reload();
       },
       error: err => this.error.set(err?.error?.message ?? 'No se pudo publicar el vuelo.')
+    });
+  }
+
+  openTicket(code: string) {
+    const ticketWindow = window.open('', '_blank');
+    this.api.ticket(code).subscribe(blob => {
+      const url = URL.createObjectURL(blob);
+      if (ticketWindow) {
+        ticketWindow.location.href = url;
+      } else {
+        window.location.href = url;
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    });
+  }
+
+  sendEmail(code: string) {
+    this.clear();
+    this.api.emailTicket(code).subscribe({
+      next: result => this.message.set(result.message),
+      error: err => this.error.set(err?.error?.message ?? 'No fue posible enviar el correo.')
     });
   }
 
