@@ -28,6 +28,16 @@ data:
         reverse_proxy frontend.airport.svc.cluster.local:80
       }
     }
+
+    grafana.umg.kyrosoftgs.com {
+      encode gzip zstd
+      reverse_proxy grafana.airport.svc.cluster.local:3000
+    }
+
+    prometheus.umg.kyrosoftgs.com {
+      encode gzip zstd
+      reverse_proxy prometheus.airport.svc.cluster.local:9090
+    }
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
