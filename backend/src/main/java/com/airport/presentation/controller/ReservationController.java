@@ -44,4 +44,10 @@ public class ReservationController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=ticket-" + code + ".pdf")
                 .body(pdf);
     }
+
+    @PostMapping("/{code}/email-ticket")
+    public ReservationDtos.TicketEmailResponse emailTicket(Authentication authentication, @PathVariable String code) {
+        boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return reservationService.emailTicket(authentication.getName(), admin, code);
+    }
 }

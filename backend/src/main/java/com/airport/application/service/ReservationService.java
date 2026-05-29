@@ -78,17 +78,18 @@ public class ReservationService {
         payment.setAuthorizationCode("AUTH-" + code());
         payments.save(payment);
 
-        boolean ticketEmailSent = false;
+        TicketEmailService.EmailResult emailResult = new TicketEmailService.EmailResult(false, "El pago no fue aprobado; no se emitio correo.");
         if (approved) {
             try {
-                ticketEmailSent = ticketEmailService.sendTicket(reservation, ticketPdfService.render(reservation));
+                emailResult = ticketEmailService.sendTicket(reservation, ticketPdfService.render(reservation));
             } catch (RuntimeException e) {
                 log.error("La reserva {} fue confirmada, pero el ticket no pudo enviarse por correo", code, e);
+                emailResult = new TicketEmailService.EmailResult(false, "La reserva fue confirmada, pero el PDF no pudo enviarse por correo.");
             }
         }
 
         return new ReservationDtos.PaymentResponse(payment.getId(), payment.getAuthorizationCode(),
-                payment.getStatus(), payment.getAmount(), ticketEmailSent);
+                payment.getStatus(), payment.getAmount(), emailResult.sent(), emailResult.message());
     }
 
     @Transactional(readOnly = true)
@@ -107,6 +108,13 @@ public class ReservationService {
             throw new BusinessException("El ticket solo existe para reservas confirmadas");
         }
         return reservation;
+    }
+
+    @Transactional(readOnly = true)
+    public ReservationDtos.TicketEmailResponse emailTicket(String email, boolean admin, String code) {
+        Reservation reservation = confirmedTicket(email, admin, code);
+        TicketEmailService.EmailResult result = ticketEmailService.sendTicket(reservation, ticketPdfService.render(reservation));
+        return new ReservationDtos.TicketEmailResponse(result.sent(), result.message());
     }
 
     public ReservationDtos.ReservationResponse toResponse(Reservation reservation) {

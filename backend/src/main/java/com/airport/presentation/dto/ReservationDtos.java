@@ -25,5 +25,7 @@ public final class ReservationDtos {
                                       Instant createdAt) {}
 
     public record PaymentResponse(Long id, String authorizationCode, PaymentStatus status, BigDecimal amount,
-                                  boolean ticketEmailSent) {}
+                                  boolean ticketEmailSent, String ticketEmailMessage) {}
+
+    public record TicketEmailResponse(boolean sent, String message) {}
 }

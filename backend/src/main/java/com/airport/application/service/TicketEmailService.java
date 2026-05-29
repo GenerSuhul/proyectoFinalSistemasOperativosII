@@ -37,10 +37,10 @@ public class TicketEmailService {
     @Value("${app.resend.api-key:}")
     private String apiKey;
 
-    public boolean sendTicket(Reservation reservation, byte[] pdf) {
+    public EmailResult sendTicket(Reservation reservation, byte[] pdf) {
         if (!enabled || apiKey == null || apiKey.isBlank() || apiKey.startsWith("replace-")) {
             log.warn("Envio de ticket omitido: RESEND_API_KEY no esta configurado");
-            return false;
+            return new EmailResult(false, "RESEND_API_KEY no esta configurado en el Secret de Kubernetes.");
         }
 
         try {
@@ -67,16 +67,18 @@ public class TicketEmailService {
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 log.error("Resend rechazo el envio del ticket {} con status {}: {}",
                         reservation.getCode(), response.statusCode(), response.body());
-                return false;
+                return new EmailResult(false, "Resend rechazo el correo con status " + response.statusCode() + ".");
             }
 
             log.info("Ticket {} enviado a {}", reservation.getCode(), reservation.getUser().getEmail());
-            return true;
+            return new EmailResult(true, "Ticket enviado al correo registrado.");
         } catch (Exception e) {
             log.error("No fue posible enviar el ticket {} por correo", reservation.getCode(), e);
-            return false;
+            return new EmailResult(false, "No fue posible conectar con Resend. Revisar logs del backend.");
         }
     }
+
+    public record EmailResult(boolean sent, String message) {}
 
     private String html(Reservation reservation) {
         var flight = reservation.getFlight();

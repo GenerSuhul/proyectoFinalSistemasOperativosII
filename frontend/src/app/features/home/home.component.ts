@@ -103,6 +103,17 @@ import { Flight } from '../../core/models';
         </div>
       </section>
 
+      <section class="destination-showcase">
+        @for (card of destinationCards; track card.code) {
+          <article [style.backgroundImage]="'linear-gradient(180deg, rgba(0,0,0,.08), rgba(0,0,0,.62)), url(' + card.image + ')'">
+            <span>{{card.code}}</span>
+            <h3>{{card.city}}</h3>
+            <p>{{card.copy}}</p>
+            <button type="button" (click)="pickDestination(card.code)">Ver vuelos</button>
+          </article>
+        }
+      </section>
+
       <section class="flight-results" @flightList>
         @if (flights().length) {
           @for (flight of flights(); track flight.id) {
@@ -336,6 +347,58 @@ import { Flight } from '../../core/models';
       display: grid;
       gap: 14px;
     }
+    .destination-showcase {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: 24px;
+    }
+    .destination-showcase article {
+      align-content: end;
+      background-position: center;
+      background-size: cover;
+      border-radius: 14px;
+      box-shadow: 0 18px 46px rgba(17, 31, 43, .12);
+      color: white;
+      display: grid;
+      min-height: 250px;
+      overflow: hidden;
+      padding: 22px;
+      position: relative;
+      transition: transform .2s ease, box-shadow .2s ease;
+    }
+    .destination-showcase article:hover {
+      box-shadow: 0 24px 60px rgba(17, 31, 43, .18);
+      transform: translateY(-4px);
+    }
+    .destination-showcase span {
+      background: rgba(255,255,255,.92);
+      border-radius: 999px;
+      color: #111;
+      font-weight: 900;
+      padding: 6px 12px;
+      position: absolute;
+      right: 18px;
+      top: 18px;
+    }
+    .destination-showcase h3 {
+      font-size: 30px;
+      margin: 0 0 8px;
+    }
+    .destination-showcase p {
+      margin: 0 0 14px;
+      max-width: 280px;
+    }
+    .destination-showcase button {
+      background: white;
+      border: 0;
+      border-radius: 999px;
+      color: #171717;
+      cursor: pointer;
+      font-weight: 900;
+      justify-self: start;
+      padding: 10px 16px;
+    }
     .flight-card {
       align-items: center;
       background: white;
@@ -426,7 +489,8 @@ import { Flight } from '../../core/models';
       .booking-panel { padding: 16px; }
       .search-card,
       .promo-card,
-      .flight-card {
+      .flight-card,
+      .destination-showcase {
         grid-template-columns: 1fr;
       }
       .fare { text-align: left; }
@@ -443,8 +507,31 @@ export class HomeComponent {
   quickDestinations = [
     { city: 'Miami', code: 'MIA' },
     { city: 'Panama', code: 'PTY' },
-    { city: 'San Salvador', code: 'SAL' },
-    { city: 'Madrid', code: 'MAD' }
+    { city: 'Bogota', code: 'BOG' },
+    { city: 'Cancun', code: 'CUN' },
+    { city: 'San Jose', code: 'SJO' },
+    { city: 'Madrid', code: 'MAD' },
+    { city: 'Lima', code: 'LIM' }
+  ];
+  destinationCards = [
+    {
+      city: 'Cartagena y Bogota',
+      code: 'BOG',
+      copy: 'Cultura, gastronomia y conexiones para Sudamerica.',
+      image: 'https://images.unsplash.com/photo-1583531352515-8884af319dc1?auto=format&fit=crop&w=900&q=80'
+    },
+    {
+      city: 'Cancun',
+      code: 'CUN',
+      copy: 'Playas del Caribe con salidas semanales desde Guatemala.',
+      image: 'https://images.unsplash.com/photo-1510097467424-192d713fd8b2?auto=format&fit=crop&w=900&q=80'
+    },
+    {
+      city: 'Madrid',
+      code: 'MAD',
+      copy: 'Conecta con Europa en una experiencia de largo alcance.',
+      image: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?auto=format&fit=crop&w=900&q=80'
+    }
   ];
 
   ngOnInit() {

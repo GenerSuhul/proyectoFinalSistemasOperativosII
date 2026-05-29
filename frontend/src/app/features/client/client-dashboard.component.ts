@@ -55,6 +55,9 @@ import { Reservation } from '../../core/models';
                   <button mat-stroked-button (click)="download(reservation.code)">
                     <mat-icon>download</mat-icon> Descargar
                   </button>
+                  <button mat-stroked-button (click)="sendEmail(reservation.code)">
+                    <mat-icon>mail</mat-icon> Enviar correo
+                  </button>
                 } @else {
                   <a mat-stroked-button routerLink="/">Reservar otro vuelo</a>
                 }
@@ -205,7 +208,7 @@ import { Reservation } from '../../core/models';
 export class ClientDashboardComponent {
   private api = inject(ApiService);
   reservations = signal<Reservation[]>([]);
-  notice = signal(history.state?.ticketEmailSent ? 'Ticket enviado al correo registrado con el PDF adjunto.' : '');
+  notice = signal(history.state?.ticketEmailMessage ?? '');
 
   ngOnInit() {
     this.api.myReservations().subscribe(reservations => this.reservations.set(reservations));
@@ -232,6 +235,13 @@ export class ClientDashboardComponent {
       anchor.download = `ticket-${code}.pdf`;
       anchor.click();
       URL.revokeObjectURL(url);
+    });
+  }
+
+  sendEmail(code: string) {
+    this.api.emailTicket(code).subscribe({
+      next: result => this.notice.set(result.message),
+      error: err => this.notice.set(err?.error?.message ?? 'No fue posible enviar el correo.')
     });
   }
 

@@ -292,7 +292,11 @@ export class CheckoutComponent {
           return;
         }
         this.router.navigateByUrl('/client', {
-          state: { ticketEmailSent: payment.ticketEmailSent, authorizationCode: payment.authorizationCode }
+          state: {
+            ticketEmailSent: payment.ticketEmailSent,
+            ticketEmailMessage: payment.ticketEmailMessage,
+            authorizationCode: payment.authorizationCode
+          }
         });
       },
       error: err => this.error.set(err?.error?.message ?? 'No fue posible completar el pago.')
