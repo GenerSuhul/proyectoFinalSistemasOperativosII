@@ -165,7 +165,25 @@ import { AuthService } from './core/auth.service';
     @media (max-width: 980px) {
       .utility-bar { display: none; }
       .main-nav { flex-wrap: wrap; min-height: auto; padding: 16px; }
-      .nav-links { order: 3; overflow-x: auto; justify-content: flex-start; width: 100%; }
+      .nav-links {
+        font-size: 15px;
+        gap: 10px;
+        justify-content: flex-start;
+        order: 3;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        width: 100%;
+      }
+      .nav-links a {
+        background: #f4f7f9;
+        border-radius: 999px;
+        padding: 8px 12px;
+        white-space: nowrap;
+      }
+      .nav-links .nav-chip {
+        background: #2c9cec;
+        color: white;
+      }
       .account-actions { margin-left: auto; }
     }
     @media (max-width: 620px) {
@@ -180,6 +198,6 @@ import { AuthService } from './core/auth.service';
 export class AppComponent {
   auth = inject(AuthService);
   promoVisible = signal(true);
-  isLogged = computed(() => !!this.auth.user());
-  isAdmin = computed(() => this.auth.user()?.role === 'ADMIN');
+  isLogged = computed(() => this.auth.isAuthenticated());
+  isAdmin = computed(() => this.auth.isAdmin());
 }

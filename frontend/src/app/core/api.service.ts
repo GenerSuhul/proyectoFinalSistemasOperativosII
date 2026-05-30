@@ -10,10 +10,11 @@ export class ApiService {
 
   airports() { return this.http.get<Airport[]>(`${this.api}/api/airports`); }
   airplanes() { return this.http.get<Airplane[]>(`${this.api}/api/airplanes`); }
-  flights(origin?: string, destination?: string) {
+  flights(origin?: string, destination?: string, from?: string) {
     let params = new HttpParams();
     if (origin) params = params.set('origin', origin);
     if (destination) params = params.set('destination', destination);
+    if (from) params = params.set('from', from);
     return this.http.get<Flight[]>(`${this.api}/api/flights`, { params });
   }
   seats(flightId: number) { return this.http.get<Seat[]>(`${this.api}/api/flights/${flightId}/seats`); }

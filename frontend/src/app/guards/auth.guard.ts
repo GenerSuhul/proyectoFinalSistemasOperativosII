@@ -4,10 +4,10 @@ import { AuthService } from '../core/auth.service';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.user() ? true : inject(Router).createUrlTree(['/login']);
+  return auth.isAuthenticated() ? true : inject(Router).createUrlTree(['/login']);
 };
 
 export const adminGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
-  return auth.user()?.role === 'ADMIN' ? true : inject(Router).createUrlTree(['/login']);
+  return auth.isAdmin() ? true : inject(Router).createUrlTree(['/login']);
 };

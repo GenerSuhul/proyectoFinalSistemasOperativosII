@@ -14,6 +14,10 @@ export class AuthService {
   user = signal<User | null>(this.readUser());
   token = computed(() => localStorage.getItem(this.tokenKey));
 
+  constructor() {
+    window.addEventListener('airport-auth-cleared', () => this.user.set(null));
+  }
+
   login(email: string, password: string) {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/api/auth/login`, { email, password }).pipe(tap(r => this.save(r)));
   }
@@ -30,6 +34,14 @@ export class AuthService {
     this.router.navigateByUrl('/');
   }
 
+  isAuthenticated() {
+    return !!this.user() && this.hasUsableToken();
+  }
+
+  isAdmin() {
+    return this.isAuthenticated() && this.user()?.role === 'ADMIN';
+  }
+
   private save(response: AuthResponse) {
     localStorage.setItem(this.tokenKey, response.accessToken);
     localStorage.setItem(this.refreshKey, response.refreshToken);
@@ -39,6 +51,25 @@ export class AuthService {
 
   private readUser(): User | null {
     const raw = localStorage.getItem('airport_user');
-    return raw ? JSON.parse(raw) as User : null;
+    if (!raw || !this.hasUsableToken()) {
+      localStorage.removeItem(this.tokenKey);
+      localStorage.removeItem(this.refreshKey);
+      localStorage.removeItem('airport_user');
+      return null;
+    }
+    return JSON.parse(raw) as User;
+  }
+
+  private hasUsableToken() {
+    const token = localStorage.getItem(this.tokenKey);
+    if (!token) {
+      return false;
+    }
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return typeof payload.exp === 'number' && payload.exp * 1000 > Date.now();
+    } catch {
+      return false;
+    }
   }
 }

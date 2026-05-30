@@ -61,6 +61,11 @@ import { Flight, Seat } from '../../core/models';
             </div>
           </div>
 
+          <button type="button" class="demo-payment" (click)="fillDemoPayment()">
+            <mat-icon>auto_fix_high</mat-icon>
+            Usar datos ficticios para la demostracion
+          </button>
+
           <label>
             <span>Numero de tarjeta</span>
             <input [(ngModel)]="cardNumber" inputmode="numeric" maxlength="19" autocomplete="cc-number" placeholder="4111 1111 1111 1111">
@@ -198,6 +203,26 @@ import { Flight, Seat } from '../../core/models';
       display: grid;
       gap: 14px;
     }
+    .demo-payment {
+      align-items: center;
+      background: #eef8fb;
+      border: 1px solid #cde9f0;
+      border-radius: 999px;
+      color: #006d80;
+      cursor: pointer;
+      display: inline-flex;
+      font-weight: 900;
+      gap: 8px;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 16px;
+      width: fit-content;
+    }
+    .demo-payment mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
     label {
       display: grid;
       gap: 7px;
@@ -246,6 +271,7 @@ import { Flight, Seat } from '../../core/models';
       .price { text-align: left; }
       .cabin { grid-template-columns: repeat(4, 1fr); }
       .cabin button:nth-child(6n + 4) { margin-left: 0; }
+      .demo-payment { width: 100%; }
     }
   `]
 })
@@ -305,5 +331,12 @@ export class CheckoutComponent {
       },
       error: err => this.error.set(err?.error?.message ?? 'No fue posible completar el pago.')
     });
+  }
+
+  fillDemoPayment() {
+    this.cardNumber = '4111111111111111';
+    this.cardHolder = 'Cliente AeroNova Demo';
+    this.expiry = '12/30';
+    this.cvv = '123';
   }
 }
